@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+MKL_VERBOSE = "MKL_VERBOSE"
+
 class TestMKLVerbose(TestCase):
     def test_verbose_on(self):
         num = 0
@@ -13,7 +15,7 @@ class TestMKLVerbose(TestCase):
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
             for line in p.stdout.readlines():
                 line = str(line, 'utf-8').strip()
-                if line.startswith("MKL_VERBOSE"):
+                if line.startswith(MKL_VERBOSE):
                     num = num + 1
                 elif line == 'Failed to set MKL into verbose mode. Please consider to disable this verbose scope.':
                     return
@@ -26,7 +28,7 @@ class TestMKLVerbose(TestCase):
                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
             for line in p.stdout.readlines():
                 line = str(line, 'utf-8').strip()
-                if line.startswith("MKL_VERBOSE"):
+                if line.startswith(MKL_VERBOSE):
                     num = num + 1
         self.assertEqual(num, 0, 'unexpected oneMKL verbose messages found.')
 
