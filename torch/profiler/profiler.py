@@ -424,21 +424,33 @@ class _KinetoProfile:
         # Construct the memory timeline plot data
         self.mem_tl = MemoryProfileTimeline(self._memory_profile())
 
-        # Depending on the file suffix, save the data as json.gz or json.
-        # For html, we can embed the image into an HTML file.
+        # Save as a self-contained HTML file for easy viewing in a browser.
         if path.endswith(".html"):
             self.mem_tl.export_memory_timeline_html(path, device)
+        
+        # Save as a compressed Gzip file.
         elif path.endswith(".gz"):
+            # Create a temporary file to hold the uncompressed JSON data.
             fp = tempfile.NamedTemporaryFile("w+t", suffix=".json", delete=False)
+            temp_path = fp.name
             fp.close()
-            if path.endswith("raw.json.gz"):
-                self.mem_tl.export_memory_timeline_raw(fp.name, device)
-            else:
-                self.mem_tl.export_memory_timeline(fp.name, device)
-            with open(fp.name) as fin:
-                with gzip.open(path, "wt") as fout:
-                    fout.writelines(fin)
-            os.remove(fp.name)
+        
+            try:
+                # Determine whether to save raw data or standard data based on the full filename.
+                if path.endswith("raw.json.gz"):
+                    self.mem_tl.export_memory_timeline_raw(temp_path, device)
+                else:
+                    self.mem_tl.export_memory_timeline(temp_path, device)
+        
+                # Read the temporary JSON file and write its contents to a new, compressed .gz file.
+                with open(temp_path) as fin:
+                    with gzip.open(path, "wt") as fout:
+                        fout.writelines(fin)
+            finally:
+                # Clean up by deleting the temporary file.
+                os.remove(temp_path)
+        
+        # For all other cases (e.g., .json), save as a plain text JSON file.
         else:
             self.mem_tl.export_memory_timeline(path, device)
 
